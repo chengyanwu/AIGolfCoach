@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     public void recordVideoButtonPressed(View view){
         recordVideo();
     }
+    public void historyButtonPressed(View view) { showHistory();}
 
     private boolean isCameraPresentInPhone(){
         if(getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)){
@@ -58,6 +59,12 @@ public class MainActivity extends AppCompatActivity {
     private void recordVideo(){
         Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
         startActivityForResult(intent, VIDEO_RECORD_CODE);
+    }
+
+    private void showHistory() {
+        Intent intent = new Intent(MainActivity.this, DisplayHistoryActivity.class);
+        Log.i("SHOW_HISTORY_TAG", "showing history");
+        startActivity(intent);
     }
 
     @Override
