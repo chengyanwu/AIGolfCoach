@@ -13,13 +13,17 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.MediaPlayer;
+import android.widget.Button;
 import android.widget.MediaController;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 import android.widget.VideoView;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,8 +31,11 @@ public class MainActivity extends AppCompatActivity {
     private static int VIDEO_RECORD_CODE = 101;
     private static final int VIDEO_PICK_GALLERY_CODE = 102;
 
-    private Uri videoPath;
+    private Uri videoPath = null;
     private VideoView videoView;
+    private FloatingActionButton pickVideoFab;
+    private Button uploadVideoBtn;
+    private Button showHisotryBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         videoView = findViewById(R.id.videoView);
+        pickVideoFab = findViewById(R.id.pickVideoFab);
+        uploadVideoBtn = findViewById(R.id.uploadBtn);
+        showHisotryBtn = findViewById(R.id.showHistoryBtn);
 
         if(isCameraPresentInPhone()){
             Log.i("VIDEO_RECORD_TAG", "Camera Detected");
@@ -44,14 +54,30 @@ public class MainActivity extends AppCompatActivity {
         }else{
             Log.i("VIDEO_RECORD_TAG", "No Camera Detected");
         }
-    }
 
-    public void uploadButtonPressed(View view){
-//        recordVideo();
-        // select video source
-        pickVideoSource();
+        pickVideoFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                pickVideoSource();
+            }
+        });
+
+        uploadVideoBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(videoPath == null){
+                    Toast.makeText(MainActivity.this, "Select a Video First", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        showHisotryBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showHistory();
+            }
+        });
     }
-    public void historyButtonPressed(View view) { showHistory();}
 
     private boolean isCameraPresentInPhone(){
         if(getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)){
@@ -100,8 +126,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .show();
-
-
     }
 
     private void pickVideoFromGallery(){
