@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "28123847108",
+    "project_id": "ai-golf-coach",
+    "storage_bucket": "ai-golf-coach.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:28123847108:android:e19d2ed4a82489eb8e2c91",
+        "android_client_info": {
+          "package_name": "com.example.aigolfcoach"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "28123847108-b018rj69hd7hpf24lvr7ul8469takpnn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQTV4crbP0SVbeGG0_NKoxx5eBIpKFnZo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "28123847108-b018rj69hd7hpf24lvr7ul8469takpnn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

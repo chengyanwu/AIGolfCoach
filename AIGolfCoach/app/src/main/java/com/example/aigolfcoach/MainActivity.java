@@ -1,5 +1,6 @@
 package com.example.aigolfcoach;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,6 +8,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -23,7 +25,17 @@ import android.view.View;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,10 +44,12 @@ public class MainActivity extends AppCompatActivity {
     private static final int VIDEO_PICK_GALLERY_CODE = 102;
 
     private Uri videoPath = null;
+
     private VideoView videoView;
     private FloatingActionButton pickVideoFab;
     private Button uploadVideoBtn;
     private Button showHisotryBtn;
+    private ProgressDialog progressDial;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +61,13 @@ public class MainActivity extends AppCompatActivity {
         uploadVideoBtn = findViewById(R.id.uploadBtn);
         showHisotryBtn = findViewById(R.id.showHistoryBtn);
 
+        // setup progress dialog
+        progressDial = new ProgressDialog(this);
+        progressDial.setTitle("Please Wait");
+        progressDial.setMessage("Uploading Video");
+        progressDial.setCanceledOnTouchOutside(false);
+
+        // check permission
         if(isCameraPresentInPhone()){
             Log.i("VIDEO_RECORD_TAG", "Camera Detected");
             getCameraPermission();
@@ -54,6 +75,8 @@ public class MainActivity extends AppCompatActivity {
         }else{
             Log.i("VIDEO_RECORD_TAG", "No Camera Detected");
         }
+
+
 
         pickVideoFab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,6 +90,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if(videoPath == null){
                     Toast.makeText(MainActivity.this, "Select a Video First", Toast.LENGTH_SHORT).show();
+                }else{
+                    uploadVideoToFirebase();
                 }
             }
         });
@@ -77,6 +102,73 @@ public class MainActivity extends AppCompatActivity {
                 showHistory();
             }
         });
+    }
+
+    private void uploadVideoToFirebase(){
+        // show progress
+        progressDial.show();
+
+        // timestamp
+        String timestamp = "" + System.currentTimeMillis();
+
+        // file path and name in firebase storage
+        String filePathAndName = "Videos/" + "Video_" + timestamp;
+
+        //storage reference
+        StorageReference storageReference = FirebaseStorage.getInstance().getReference(filePathAndName);
+        // upload video, you can upload any type of file using this method
+        storageReference.putFile(videoPath)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        // video uploaded, get url of uploaded video
+                        Task<Uri> uriTask = taskSnapshot.getStorage().getDownloadUrl();
+                        while(!uriTask.isSuccessful());
+                        Uri downloadUri = uriTask.getResult();
+                        while (!uriTask.isSuccessful()){
+                            // uri of uploaded video is received
+
+
+                            //now we can add video detail to our firebass database
+                            HashMap<String, Object> hashMap = new HashMap<>();
+                            hashMap.put("id", ""+timestamp);
+                            hashMap.put("timestamp", "" + timestamp);
+                            hashMap.put("videoUrl", "" + downloadUri);
+
+                            DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Videos");
+                            reference.child(timestamp)
+                                    .setValue(hashMap)
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void unused) {
+                                            // video details added to databse
+                                            progressDial.dismiss();
+                                            Toast.makeText(MainActivity.this, "Video uploaded...", Toast.LENGTH_SHORT).show();
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            // failed adding details to db
+                                            progressDial.dismiss();
+                                            Toast.makeText(MainActivity.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // failed uploading to storage
+                        progressDial.dismiss();
+                        Toast.makeText(MainActivity.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        progressDial.dismiss();
+
+
     }
 
     private boolean isCameraPresentInPhone(){
@@ -169,6 +261,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if(requestCode == VIDEO_PICK_GALLERY_CODE){
             videoPath = data.getData();
+            Log.i("VIDEO_PICK_GALLERY","Video is picked from path" +videoPath );
             setVideoToVideoView();
 
         }
