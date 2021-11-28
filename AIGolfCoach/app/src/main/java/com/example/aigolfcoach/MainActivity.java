@@ -125,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
                         Task<Uri> uriTask = taskSnapshot.getStorage().getDownloadUrl();
                         while(!uriTask.isSuccessful());
                         Uri downloadUri = uriTask.getResult();
-                        while (!uriTask.isSuccessful()){
+                        if (uriTask.isSuccessful()){
                             // uri of uploaded video is received
 
 
@@ -165,8 +165,6 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
-
-        progressDial.dismiss();
 
 
     }
