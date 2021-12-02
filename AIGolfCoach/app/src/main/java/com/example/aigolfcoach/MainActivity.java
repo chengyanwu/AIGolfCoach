@@ -1,5 +1,27 @@
 package com.example.aigolfcoach;
 
+import android.Manifest;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Log;
+import android.util.Size;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.MediaController;
+import android.widget.Spinner;
+import android.widget.Toast;
+import android.widget.VideoView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -7,24 +29,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import android.Manifest;
-import android.app.ProgressDialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.media.MediaPlayer;
-import android.widget.Button;
-import android.widget.MediaController;
-import android.net.Uri;
-import android.os.Bundle;
-import android.provider.MediaStore;
-import android.util.Log;
-import android.view.View;
-import android.widget.Toast;
-import android.widget.VideoView;
-
+import com.example.aigolfcoach.gles.GlPlayerRenderer;
+import com.example.aigolfcoach.gles.GlPlayerView;
+import com.example.aigolfcoach.preference.PreferenceUtils;
+import com.example.aigolfcoach.preview.VisionProcessorBase;
+import com.example.aigolfcoach.preview.posedetector.PoseDetectorProcessor;
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -34,14 +46,21 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.google.mlkit.vision.pose.PoseDetectorOptionsBase;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public abstract class MainActivity extends AppCompatActivity implements GlPlayerRenderer.FrameListener{
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     private static int CAMERA_PERMISSION_CODE = 100;
     private static int VIDEO_RECORD_CODE = 101;
     private static final int VIDEO_PICK_GALLERY_CODE = 102;
+    private static final int REQUEST_CHOOSE_VIDEO = 1003;
+
+    private static final String SPINE_TRACKING = "Spine Tracking";
 
     private Uri videoPath = null;
 
@@ -51,12 +70,36 @@ public class MainActivity extends AppCompatActivity {
     private Button showHisotryBtn;
     private ProgressDialog progressDial;
 
+    private SimpleExoPlayer player;
+    private PlayerView playerView;
+    private GlPlayerView glPlayerView;
+    private GraphicOverlay graphicOverlay;
+
+    private String selectedFunction = SPINE_TRACKING;
+    private VisionProcessorBase imageProcessor;
+
+    private int frameWidth, frameHeight;
+    private boolean processing;
+    private boolean pending;
+    private Bitmap lastFrame;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        videoView = findViewById(R.id.videoView);
+        player = new SimpleExoPlayer.Builder(this).build();
+        playerView = findViewById(R.id.player_view);
+        playerView.setPlayer(player);
+
+        FrameLayout contentFrame = playerView.findViewById(R.id.exo_content_frame);
+        glPlayerView = new GlPlayerView(this);
+        glPlayerView.setSimpleExoPlayer(player);
+        glPlayerView.setFrameListener(this);
+        View videoFrameView = glPlayerView;
+
+        if(videoFrameView != null) contentFrame.addView(videoFrameView);
+
         pickVideoFab = findViewById(R.id.pickVideoFab);
         uploadVideoBtn = findViewById(R.id.uploadBtn);
         showHisotryBtn = findViewById(R.id.showHistoryBtn);
@@ -102,6 +145,28 @@ public class MainActivity extends AppCompatActivity {
                 showHistory();
             }
         });
+
+        populateFunctionSelector();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        createFunctionProcessor();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        player.pause();
+        stopImageProcessor();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        player.stop();
+        player.release();
     }
 
     private void uploadVideoToFirebase(){
@@ -226,20 +291,112 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(Intent.createChooser(intent, "Select Videos"), VIDEO_PICK_GALLERY_CODE);
     }
 
-    private void setVideoToVideoView(){
-        MediaController mediaController = new MediaController(this);
-        mediaController.setAnchorView(videoView);
+    private void setupPlayer(Uri uri){
+        MediaItem mediaItem = MediaItem.fromUri(uri);
+        player.stop();
+        player.setMediaItem(mediaItem);
+        player.prepare();
+        player.play();
+    }
 
-        //set media controller to video view
-        videoView.setMediaController(mediaController);
-        // set video url
-        videoView.setVideoURI(videoPath);
-        videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mediaPlayer) {
-                videoView.pause();
+    private void startChooseVideoIntentForResult() {
+        Intent intent = new Intent();
+        intent.setType("video/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Video"), REQUEST_CHOOSE_VIDEO);
+    }
+
+    protected Size getSizeForDesiredSize(int width, int height, int desiredSize){
+        int w, h;
+        if(width > height){
+            w = desiredSize;
+            h = Math.round((height/(float)width) * w);
+        }else{
+            h = desiredSize;
+            w = Math.round((width/(float)height) * h);
+        }
+        return new Size(w, h);
+    }
+
+    protected void processFrame(Bitmap frame){
+        lastFrame = frame;
+        if(imageProcessor != null){
+            pending = processing;
+            if(!processing){
+                processing = true;
+                if(frameWidth != frame.getWidth() || frameHeight != frame.getHeight()){
+                    frameWidth = frame.getWidth();
+                    frameHeight = frame.getHeight();
+                    graphicOverlay.setImageSourceInfo(frameWidth, frameHeight, false);
+                }
+                imageProcessor.setOnProcessingCompleteListener(new VisionProcessorBase.OnProcessingCompleteListener() {
+                    @Override
+                    public void onProcessingComplete() {
+                        processing = false;
+                        onProcessComplete(frame);
+                        if(pending) processFrame(lastFrame);
+                    }
+                });
+                imageProcessor.processBitmap(frame, graphicOverlay);
             }
-        });
+        }
+    }
+
+    protected void onProcessComplete(Bitmap frame){ }
+
+    private void populateFunctionSelector(){
+        Spinner functionSpinner = findViewById(R.id.function_selector);
+        List<String> options = new ArrayList<>();
+        options.add(SPINE_TRACKING);
+
+        // Creating adapter for featureSpinner
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, R.layout.spinner_style, options);
+        // Drop down layout style - list view with radio button
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // attaching data adapter to spinner
+        functionSpinner.setAdapter(dataAdapter);
+        functionSpinner.setOnItemSelectedListener(
+                new AdapterView.OnItemSelectedListener() {
+
+                    @Override
+                    public void onItemSelected(
+                            AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                        selectedFunction = parentView.getItemAtPosition(pos).toString();
+                        createFunctionProcessor();
+                        if(lastFrame != null) processFrame(lastFrame);
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> arg0) {}
+                });
+    }
+
+    private void createFunctionProcessor(){
+
+        try{
+            switch (selectedFunction){
+                case SPINE_TRACKING:
+                    PoseDetectorOptionsBase poseDetectorOptions =
+                            PreferenceUtils.getPoseDetectorOptionsForLivePreview(this);
+//                    boolean shouldShowInFrameLikelihood = PreferenceUtils.shouldShowPoseDetectionInFrameLikelihoodLivePreview(this);
+                    boolean shouldShowInFrameLikelihood = false;
+//                    boolean visualizeZ = PreferenceUtils.shouldPoseDetectionVisualizeZ(this);
+                    boolean visualizeZ = false;
+                    boolean rescaleZ = PreferenceUtils.shouldPoseDetectionRescaleZForVisualization(this);
+                    boolean runClassification = PreferenceUtils.shouldPoseDetectionRunClassification(this);
+                    imageProcessor =
+                            new PoseDetectorProcessor(
+                                    this,
+                                    poseDetectorOptions,
+                                    shouldShowInFrameLikelihood,
+                                    visualizeZ,
+                                    rescaleZ,
+                                    runClassification,
+                                    /* isStreamMode = */ true);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -248,20 +405,29 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == VIDEO_RECORD_CODE) {
             if (resultCode == RESULT_OK) {
 
-                videoPath = data.getData();
+                setupPlayer(data.getData());
                 Log.i("VIDEO_RECORD_TAG", "Video is recorded and available at path" +videoPath);
             }else if (resultCode == RESULT_CANCELED){
                 Log.i("VIDEO_RECORD_TAG", "Recording video is canceled");
             }else{
                 Log.i("VIDEO_RECORD_TAG", "Recording video has errors");
             }
-            setVideoToVideoView();
+
         }
         if(requestCode == VIDEO_PICK_GALLERY_CODE){
-            videoPath = data.getData();
+            setupPlayer(data.getData());
             Log.i("VIDEO_PICK_GALLERY","Video is picked from path" +videoPath );
-            setVideoToVideoView();
 
+
+        }
+    }
+
+    private void stopImageProcessor(){
+        if(imageProcessor != null){
+            imageProcessor.stop();
+            imageProcessor = null;
+            processing = false;
+            pending = false;
         }
     }
 
