@@ -22,8 +22,8 @@ import android.preference.ListPreference;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import androidx.annotation.StringRes;
-import com.google.mlkit.vision.demo.CameraSource;
-import com.google.mlkit.vision.demo.CameraSource.SizePair;
+import com.example.aigolfcoach.CameraSource;
+import com.example.aigolfcoach.CameraSource.SizePair;
 import com.example.aigolfcoach.R;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +36,7 @@ public class LivePreviewPreferenceFragment extends PreferenceFragment {
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    addPreferencesFromResource(R.xml.preference_live_preview_quickstart);
+//    addPreferencesFromResource(R.xml.preference_live_preview_quickstart);
     setUpCameraPreferences();
     FaceDetectionUtils.setUpFaceDetectionPreferences(this, /* isStreamMode = */ true);
   }

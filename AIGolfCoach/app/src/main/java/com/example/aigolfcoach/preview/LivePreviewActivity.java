@@ -116,8 +116,8 @@ public final class LivePreviewActivity extends AppCompatActivity
     spinner.setAdapter(dataAdapter);
     spinner.setOnItemSelectedListener(this);
 
-    ToggleButton facingSwitch = findViewById(R.id.facing_switch);
-    facingSwitch.setOnCheckedChangeListener(this);
+//    ToggleButton facingSwitch = findViewById(R.id.facing_switch);
+//    facingSwitch.setOnCheckedChangeListener(this);
 
 
     if (allPermissionsGranted()) {

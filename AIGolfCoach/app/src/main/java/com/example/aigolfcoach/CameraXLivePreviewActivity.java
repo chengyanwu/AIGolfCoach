@@ -160,8 +160,8 @@ public final class CameraXLivePreviewActivity extends AppCompatActivity
     spinner.setAdapter(dataAdapter);
     spinner.setOnItemSelectedListener(this);
 
-    ToggleButton facingSwitch = findViewById(R.id.facing_switch);
-    facingSwitch.setOnCheckedChangeListener(this);
+//    ToggleButton facingSwitch = findViewById(R.id.facing_switch);
+//    facingSwitch.setOnCheckedChangeListener(this);
 
     new ViewModelProvider(this, AndroidViewModelFactory.getInstance(getApplication()))
         .get(CameraXViewModel.class)

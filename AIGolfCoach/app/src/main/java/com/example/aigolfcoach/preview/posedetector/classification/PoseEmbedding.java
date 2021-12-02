@@ -16,11 +16,11 @@
 
 package com.example.aigolfcoach.preview.posedetector.classification;
 
-import static com.google.mlkit.vision.demo.java.posedetector.classification.Utils.average;
-import static com.google.mlkit.vision.demo.java.posedetector.classification.Utils.l2Norm2D;
-import static com.google.mlkit.vision.demo.java.posedetector.classification.Utils.multiplyAll;
-import static com.google.mlkit.vision.demo.java.posedetector.classification.Utils.subtract;
-import static com.google.mlkit.vision.demo.java.posedetector.classification.Utils.subtractAll;
+import static com.example.aigolfcoach.preview.posedetector.classification.Utils.average;
+import static com.example.aigolfcoach.preview.posedetector.classification.Utils.l2Norm2D;
+import static com.example.aigolfcoach.preview.posedetector.classification.Utils.multiplyAll;
+import static com.example.aigolfcoach.preview.posedetector.classification.Utils.subtract;
+import static com.example.aigolfcoach.preview.posedetector.classification.Utils.subtractAll;
 
 import com.google.mlkit.vision.common.PointF3D;
 import com.google.mlkit.vision.pose.PoseLandmark;

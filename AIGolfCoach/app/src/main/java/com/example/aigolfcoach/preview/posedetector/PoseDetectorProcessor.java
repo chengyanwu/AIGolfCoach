@@ -24,7 +24,7 @@ import com.google.android.odml.image.MlImage;
 import com.google.mlkit.vision.common.InputImage;
 import com.example.aigolfcoach.GraphicOverlay;
 import com.example.aigolfcoach.preview.VisionProcessorBase;
-import com.google.mlkit.vision.demo.java.posedetector.classification.PoseClassifierProcessor;
+import com.example.aigolfcoach.preview.posedetector.classification.PoseClassifierProcessor;
 import com.google.mlkit.vision.pose.Pose;
 import com.google.mlkit.vision.pose.PoseDetection;
 import com.google.mlkit.vision.pose.PoseDetector;
