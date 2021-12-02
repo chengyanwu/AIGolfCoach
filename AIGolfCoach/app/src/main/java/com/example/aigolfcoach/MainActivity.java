@@ -52,7 +52,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public abstract class MainActivity extends AppCompatActivity implements GlPlayerRenderer.FrameListener{
+public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.FrameListener{
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private static int CAMERA_PERMISSION_CODE = 100;
@@ -84,6 +84,11 @@ public abstract class MainActivity extends AppCompatActivity implements GlPlayer
     private Bitmap lastFrame;
 
     @Override
+    public void onFrame(Bitmap bitmap) {
+        processFrame(bitmap);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -99,6 +104,9 @@ public abstract class MainActivity extends AppCompatActivity implements GlPlayer
         View videoFrameView = glPlayerView;
 
         if(videoFrameView != null) contentFrame.addView(videoFrameView);
+
+        graphicOverlay = new GraphicOverlay(this, null);
+        contentFrame.addView(graphicOverlay);
 
         pickVideoFab = findViewById(R.id.pickVideoFab);
         uploadVideoBtn = findViewById(R.id.uploadBtn);
@@ -404,8 +412,8 @@ public abstract class MainActivity extends AppCompatActivity implements GlPlayer
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == VIDEO_RECORD_CODE) {
             if (resultCode == RESULT_OK) {
-
-                setupPlayer(data.getData());
+                videoPath = data.getData();
+                setupPlayer(videoPath);
                 Log.i("VIDEO_RECORD_TAG", "Video is recorded and available at path" +videoPath);
             }else if (resultCode == RESULT_CANCELED){
                 Log.i("VIDEO_RECORD_TAG", "Recording video is canceled");
@@ -415,7 +423,8 @@ public abstract class MainActivity extends AppCompatActivity implements GlPlayer
 
         }
         if(requestCode == VIDEO_PICK_GALLERY_CODE){
-            setupPlayer(data.getData());
+            videoPath = data.getData();
+            setupPlayer(videoPath);
             Log.i("VIDEO_PICK_GALLERY","Video is picked from path" +videoPath );
 
 
