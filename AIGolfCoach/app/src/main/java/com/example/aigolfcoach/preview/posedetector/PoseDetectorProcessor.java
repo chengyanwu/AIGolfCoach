@@ -41,6 +41,7 @@ public class PoseDetectorProcessor
 
   private final PoseDetector detector;
 
+  private final String function;
   private final boolean showInFrameLikelihood;
   private final boolean visualizeZ;
   private final boolean rescaleZForVisualization;
@@ -72,12 +73,14 @@ public class PoseDetectorProcessor
   public PoseDetectorProcessor(
       Context context,
       PoseDetectorOptionsBase options,
+      String function,
       boolean showInFrameLikelihood,
       boolean visualizeZ,
       boolean rescaleZForVisualization,
       boolean runClassification,
       boolean isStreamMode) {
     super(context);
+    this.function = function;
     this.showInFrameLikelihood = showInFrameLikelihood;
     this.visualizeZ = visualizeZ;
     this.rescaleZForVisualization = rescaleZForVisualization;
@@ -139,6 +142,7 @@ public class PoseDetectorProcessor
     graphicOverlay.add(
         new PoseGraphic(
             graphicOverlay,
+                this.function,
             poseWithClassification.pose,
             showInFrameLikelihood,
             visualizeZ,

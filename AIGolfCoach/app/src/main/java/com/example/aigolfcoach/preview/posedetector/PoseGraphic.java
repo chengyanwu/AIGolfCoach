@@ -42,6 +42,9 @@ public class PoseGraphic extends Graphic {
   private static final float STROKE_WIDTH = 10.0f;
   private static final float POSE_CLASSIFICATION_TEXT_SIZE = 60.0f;
 
+  private static final String SPINE_TRACKING = "Spine Tracking";
+  private static final String HEAD_TRACKING = "Head Tracking";
+
   private final Pose pose;
   private final boolean showInFrameLikelihood;
   private final boolean visualizeZ;
@@ -54,9 +57,15 @@ public class PoseGraphic extends Graphic {
   private final Paint leftPaint;
   private final Paint rightPaint;
   private final Paint whitePaint;
+  private final Paint greenPaint;
+  private final Paint redPaint;
+
+
+  private final String function;
 
   PoseGraphic(
       GraphicOverlay overlay,
+      String function,
       Pose pose,
       boolean showInFrameLikelihood,
       boolean visualizeZ,
@@ -64,6 +73,7 @@ public class PoseGraphic extends Graphic {
       List<String> poseClassification) {
     super(overlay);
     this.pose = pose;
+    this.function = function;
     this.showInFrameLikelihood = showInFrameLikelihood;
     this.visualizeZ = visualizeZ;
     this.rescaleZForVisualization = rescaleZForVisualization;
@@ -84,6 +94,13 @@ public class PoseGraphic extends Graphic {
     rightPaint = new Paint();
     rightPaint.setStrokeWidth(STROKE_WIDTH);
     rightPaint.setColor(Color.YELLOW);
+    redPaint = new Paint();
+    redPaint.setStrokeWidth(STROKE_WIDTH);
+    redPaint.setColor(Color.RED);
+    greenPaint = new Paint();
+    greenPaint.setStrokeWidth(STROKE_WIDTH);
+    greenPaint.setColor(Color.GREEN);
+
   }
 
   @Override
@@ -106,17 +123,17 @@ public class PoseGraphic extends Graphic {
     }
 
     // Draw all the points
-    for (PoseLandmark landmark : landmarks) {
-      drawPoint(canvas, landmark, whitePaint);
-      if (visualizeZ && rescaleZForVisualization) {
-        zMin = min(zMin, landmark.getPosition3D().getZ());
-        zMax = max(zMax, landmark.getPosition3D().getZ());
-      }
-    }
+//    for (PoseLandmark landmark : landmarks) {
+//      drawPoint(canvas, landmark, whitePaint);
+//      if (visualizeZ && rescaleZForVisualization) {
+//        zMin = min(zMin, landmark.getPosition3D().getZ());
+//        zMax = max(zMax, landmark.getPosition3D().getZ());
+//      }
+//    }
 
     PoseLandmark nose = pose.getPoseLandmark(PoseLandmark.NOSE);
-    PoseLandmark lefyEyeInner = pose.getPoseLandmark(PoseLandmark.LEFT_EYE_INNER);
-    PoseLandmark lefyEye = pose.getPoseLandmark(PoseLandmark.LEFT_EYE);
+    PoseLandmark leftEyeInner = pose.getPoseLandmark(PoseLandmark.LEFT_EYE_INNER);
+    PoseLandmark leftEye = pose.getPoseLandmark(PoseLandmark.LEFT_EYE);
     PoseLandmark leftEyeOuter = pose.getPoseLandmark(PoseLandmark.LEFT_EYE_OUTER);
     PoseLandmark rightEyeInner = pose.getPoseLandmark(PoseLandmark.RIGHT_EYE_INNER);
     PoseLandmark rightEye = pose.getPoseLandmark(PoseLandmark.RIGHT_EYE);
@@ -191,9 +208,13 @@ public class PoseGraphic extends Graphic {
 //    drawLine(canvas, rightAnkle, rightHeel, rightPaint);
 //    drawLine(canvas, rightHeel, rightFootIndex, rightPaint);
 
-    drawSpine(canvas, true, leftShoulder, rightShoulder, leftHip, rightHip, rightPaint);
-    drawSpine(canvas, false, leftShoulder, rightShoulder, leftHip, rightHip, leftPaint);
-
+    switch(function){
+      case SPINE_TRACKING:
+        drawSpine(canvas, true, leftShoulder, rightShoulder, leftHip, rightHip);
+        drawSpine(canvas, false, leftShoulder, rightShoulder, leftHip, rightHip);
+      case HEAD_TRACKING:
+        drawHead(canvas, leftEye, rightEye, nose);
+    }
     // Draw inFrameLikelihood for all points
     if (showInFrameLikelihood) {
       for (PoseLandmark landmark : landmarks) {
@@ -206,10 +227,22 @@ public class PoseGraphic extends Graphic {
     }
   }
 
-    void drawPoint(Canvas canvas, PoseLandmark landmark, Paint paint) {
+  private void drawEye(Canvas canvas, PoseLandmark rightEye) {
+    drawPoint(canvas, rightEye, rightPaint);
+  }
+  private void drawHead(Canvas canvas, PoseLandmark leftEye, PoseLandmark rightEye, PoseLandmark nose) {
+    PointF3D point1 = leftEye.getPosition3D();
+    PointF3D point2 = rightEye.getPosition3D();
+    PointF3D point3 = nose.getPosition3D();
+    float pointHeadX = (point1.getX() + point2.getX() + point3.getX()) / 3;
+    float pointHeadY = (point1.getY() + point2.getY() + point3.getY()) / 3;
+    canvas.drawCircle(translateX(pointHeadX), translateY(pointHeadY), 15, rightPaint);
+  }
+
+  void drawPoint(Canvas canvas, PoseLandmark landmark, Paint paint) {
     PointF3D point = landmark.getPosition3D();
     maybeUpdatePaintColor(paint, canvas, point.getZ());
-    canvas.drawCircle(translateX(point.getX()), translateY(point.getY()), DOT_RADIUS, paint);
+    canvas.drawCircle(translateX(point.getX()), translateY(point.getY()), 12, paint);
   }
 
   void drawLine(Canvas canvas, PoseLandmark startLandmark, PoseLandmark endLandmark, Paint paint) {
@@ -228,7 +261,7 @@ public class PoseGraphic extends Graphic {
           paint);
   }
 
-  void drawSpine(Canvas canvas, boolean isCoach, PoseLandmark leftShoulder, PoseLandmark rightShoulder, PoseLandmark leftHip, PoseLandmark rightHip, Paint paint){
+  void drawSpine(Canvas canvas, boolean isCoach, PoseLandmark leftShoulder, PoseLandmark rightShoulder, PoseLandmark leftHip, PoseLandmark rightHip){
     float topX, topY, topZ, bottomX, bottomY, bottomZ;
     topX = (leftShoulder.getPosition3D().getX() + rightShoulder.getPosition3D().getX()) / 2;
     topY = (leftShoulder.getPosition3D().getY() + rightShoulder.getPosition3D().getY()) / 2;
@@ -244,6 +277,8 @@ public class PoseGraphic extends Graphic {
     PointF top2D;
     PointF bottom2D;
 
+    Paint paint;
+
     if(isCoach){
       float r = -(float) Math.sqrt( Math.pow((topX - bottomX),2) + Math.pow((topY - bottomY),2) );
       float new_topX = bottomX - (float) (r * Math.cos(-Math.PI / 3));
@@ -252,9 +287,13 @@ public class PoseGraphic extends Graphic {
       top = from(new_topX, new_topY, topZ);
       bottom = from(bottomX, bottomY, bottomZ);
 
-      top2D = new PointF(new_topX, new_topY);
-      bottom2D = new PointF(bottomX, bottomY);
+      paint = rightPaint;
     }else {
+      float deltaX = topX - bottomX;
+      float deltaY =topY - bottomY;
+      double rad = - (double)Math.atan2(deltaY, deltaX);
+      if( Math.abs(rad - (Math.PI / 3) ) < 0.034) paint = greenPaint;
+      else paint = redPaint;
       top = from(topX, topY, topZ);
       bottom = from(bottomX, bottomY, bottomZ);
     }

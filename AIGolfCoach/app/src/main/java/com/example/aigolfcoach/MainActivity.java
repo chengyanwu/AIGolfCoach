@@ -6,18 +6,15 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.util.Size;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.MediaController;
 import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -61,6 +58,7 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
     private static final int REQUEST_CHOOSE_VIDEO = 1003;
 
     private static final String SPINE_TRACKING = "Spine Tracking";
+    private static final String HEAD_TRACKING = "Head Tracking";
 
     private Uri videoPath = null;
 
@@ -307,25 +305,6 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
         player.play();
     }
 
-    private void startChooseVideoIntentForResult() {
-        Intent intent = new Intent();
-        intent.setType("video/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Video"), REQUEST_CHOOSE_VIDEO);
-    }
-
-    protected Size getSizeForDesiredSize(int width, int height, int desiredSize){
-        int w, h;
-        if(width > height){
-            w = desiredSize;
-            h = Math.round((height/(float)width) * w);
-        }else{
-            h = desiredSize;
-            w = Math.round((width/(float)height) * h);
-        }
-        return new Size(w, h);
-    }
-
     protected void processFrame(Bitmap frame){
         lastFrame = frame;
         if(imageProcessor != null){
@@ -356,6 +335,7 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
         Spinner functionSpinner = findViewById(R.id.function_selector);
         List<String> options = new ArrayList<>();
         options.add(SPINE_TRACKING);
+        options.add(HEAD_TRACKING);
 
         // Creating adapter for featureSpinner
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, R.layout.spinner_style, options);
@@ -381,30 +361,23 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
 
     private void createFunctionProcessor(){
 
-        try{
-            switch (selectedFunction){
-                case SPINE_TRACKING:
-                    PoseDetectorOptionsBase poseDetectorOptions =
-                            PreferenceUtils.getPoseDetectorOptionsForLivePreview(this);
-//                    boolean shouldShowInFrameLikelihood = PreferenceUtils.shouldShowPoseDetectionInFrameLikelihoodLivePreview(this);
-                    boolean shouldShowInFrameLikelihood = false;
-//                    boolean visualizeZ = PreferenceUtils.shouldPoseDetectionVisualizeZ(this);
-                    boolean visualizeZ = false;
-                    boolean rescaleZ = PreferenceUtils.shouldPoseDetectionRescaleZForVisualization(this);
-                    boolean runClassification = PreferenceUtils.shouldPoseDetectionRunClassification(this);
-                    imageProcessor =
-                            new PoseDetectorProcessor(
-                                    this,
-                                    poseDetectorOptions,
-                                    shouldShowInFrameLikelihood,
-                                    visualizeZ,
-                                    rescaleZ,
-                                    runClassification,
-                                    /* isStreamMode = */ true);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        PoseDetectorOptionsBase poseDetectorOptions =
+                PreferenceUtils.getPoseDetectorOptionsForLivePreview(this);
+        boolean shouldShowInFrameLikelihood = false;
+        boolean visualizeZ = false;
+        boolean rescaleZ = PreferenceUtils.shouldPoseDetectionRescaleZForVisualization(this);
+        boolean runClassification = PreferenceUtils.shouldPoseDetectionRunClassification(this);
+        imageProcessor =
+                new PoseDetectorProcessor(
+                        this,
+                        poseDetectorOptions,
+                        selectedFunction,
+                        shouldShowInFrameLikelihood,
+                        visualizeZ,
+                        rescaleZ,
+                        runClassification,
+                        /* isStreamMode = */ true);
+
     }
 
     @Override
