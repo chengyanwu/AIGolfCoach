@@ -46,8 +46,13 @@ import com.google.firebase.storage.UploadTask;
 import com.google.mlkit.vision.pose.PoseDetectorOptionsBase;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.SimpleTimeZone;
+import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.FrameListener{
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -180,10 +185,17 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
         progressDial.show();
 
         // timestamp
-        String timestamp = "" + System.currentTimeMillis();
+        String[] ids = TimeZone.getAvailableIDs(-8 * 60 * 60 * 1000);
+        SimpleTimeZone pdt = new SimpleTimeZone(-8 * 60 * 60 * 1000, ids[0]);
+        Calendar calendar = new GregorianCalendar(pdt);
+        Date trialTime = new Date();
+        calendar.setTime(trialTime);
+        String timestamp = "" + calendar.get(Calendar.MONTH) + "_" + calendar.get(Calendar.DATE) + "_"
+                + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE);
+
 
         // file path and name in firebase storage
-        String filePathAndName = "Videos/" + "Video_" + timestamp;
+        String filePathAndName = "Videos/" + timestamp;
 
         //storage reference
         StorageReference storageReference = FirebaseStorage.getInstance().getReference(filePathAndName);
@@ -199,10 +211,9 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
                         if (uriTask.isSuccessful()){
                             // uri of uploaded video is received
 
-
                             //now we can add video detail to our firebass database
                             HashMap<String, Object> hashMap = new HashMap<>();
-                            hashMap.put("id", ""+timestamp);
+                            hashMap.put("id", "" + timestamp);
                             hashMap.put("timestamp", "" + timestamp);
                             hashMap.put("videoUrl", "" + downloadUri);
 
