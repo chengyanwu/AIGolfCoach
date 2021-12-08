@@ -25,6 +25,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.aigolfcoach.gles.GlPlayerRenderer;
 import com.example.aigolfcoach.gles.GlPlayerView;
@@ -185,13 +186,14 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
         progressDial.show();
 
         // timestamp
-        String[] ids = TimeZone.getAvailableIDs(-8 * 60 * 60 * 1000);
-        SimpleTimeZone pdt = new SimpleTimeZone(-8 * 60 * 60 * 1000, ids[0]);
-        Calendar calendar = new GregorianCalendar(pdt);
-        Date trialTime = new Date();
-        calendar.setTime(trialTime);
-        String timestamp = "" + calendar.get(Calendar.MONTH) + "_" + calendar.get(Calendar.DATE) + "_"
-                + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE);
+        String timestamp = "" + System.currentTimeMillis();
+//        String[] ids = TimeZone.getAvailableIDs(-8 * 60 * 60 * 1000);
+//        SimpleTimeZone pdt = new SimpleTimeZone(-8 * 60 * 60 * 1000, ids[0]);
+//        Calendar calendar = new GregorianCalendar(pdt);
+//        Date trialTime = new Date();
+//        calendar.setTime(trialTime);
+//        String timestamp = "" + calendar.get(Calendar.MONTH) + "_" + calendar.get(Calendar.DATE) + "_"
+//                + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE);
 
 
         // file path and name in firebase storage

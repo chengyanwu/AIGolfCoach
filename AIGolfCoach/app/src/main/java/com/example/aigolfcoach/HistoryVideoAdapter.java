@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.Layout;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,12 +18,15 @@ import android.widget.VideoView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.exoplayer2.ui.PlayerView;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapter.VideoHolder> {
 
+    private String TAG = "HistoryVideoAdapter";
     private Context context;
     private ArrayList<HistoryVideo> videoArrayList;
 
@@ -79,6 +83,7 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
             public void onPrepared(MediaPlayer mp) {
                 // video is ready to play
                 mp.start();
+
             }
         });
 
@@ -88,16 +93,19 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
                 // to check if buffering, rendering etc
                 switch(what){
                     case MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START:{
+                        Log.i(TAG, "RENDERING STARTS");
                         // rendering started
                         holder.progressBar.setVisibility(View.VISIBLE);
                         return true;
                     }
                     case MediaPlayer.MEDIA_INFO_BUFFERING_START:{
+                        Log.i(TAG, "BUFFERING STARTS");
                         // buffering starts
                         holder.progressBar.setVisibility(View.VISIBLE);
                         return true;
                     }
                     case MediaPlayer.MEDIA_INFO_BUFFERING_END:{
+                        Log.i(TAG, "BUFFERING ENDS");
                         holder.progressBar.setVisibility(View.GONE);
                         return true;
                     }
@@ -125,6 +133,8 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
     class VideoHolder extends RecyclerView.ViewHolder{
         // UI Views of row_video.xml
         VideoView videoView;
+//        PlayerView playerView;
+
         TextView titletv, timetv;
         ProgressBar progressBar;
 
