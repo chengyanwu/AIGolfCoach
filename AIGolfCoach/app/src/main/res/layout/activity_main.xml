@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/black"
     tools:context=".MainActivity">
 
     <!--    Preview Selected Video-->
@@ -17,7 +18,7 @@
         app:layout_constraintBottom_toTopOf="@+id/control"/>
 
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/control"
         android:layout_width="408dp"
         android:layout_height="232dp"
@@ -26,44 +27,52 @@
         android:padding="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent">
         <!--  Select Video  -->
+
         <Button
             android:id="@+id/showHistoryBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="historyButtonPressed"
             android:layout_gravity="center_horizontal"
             android:text="History"
-            android:layout_margin="10dp"
+            app:layout_constraintBottom_toTopOf="@+id/function_selector"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             tools:ignore="OnClick" />
 
         <Button
             android:id="@+id/uploadBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Upload"
             android:layout_gravity="center_horizontal"
-             />
+            android:text="Upload"
+            app:layout_constraintBottom_toTopOf="@+id/showHistoryBtn"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Spinner
+            android:id="@+id/function_selector"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/pickVideoFab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="336dp"
+            android:layout_marginStart="320dp"
+            android:layout_marginBottom="16dp"
             android:src="@drawable/ic_video_library"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <Spinner
-            android:id="@+id/function_selector"
-            android:layout_width="80dp"
-            android:layout_height="60dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="20dp"
-            android:gravity="center" />
-
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

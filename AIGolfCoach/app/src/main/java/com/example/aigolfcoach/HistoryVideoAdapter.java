@@ -18,7 +18,22 @@ import android.widget.VideoView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
+import com.google.android.exoplayer2.extractor.ExtractorsFactory;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.ProgressiveMediaSource;
+import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.upstream.BandwidthMeter;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
+import com.google.android.exoplayer2.util.EventLogger;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -29,6 +44,7 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
     private String TAG = "HistoryVideoAdapter";
     private Context context;
     private ArrayList<HistoryVideo> videoArrayList;
+    private Player.Listener listener;
 
     public HistoryVideoAdapter(Context context, ArrayList<HistoryVideo> videoArrayList){
         this.context = context;
@@ -60,6 +76,7 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
         //set data
         holder.timetv.setText(formattedDateTime);
         setVideoUrl(historyVideo, holder);
+
     }
 
     private void setVideoUrl(HistoryVideo historyVideo, VideoHolder holder){
@@ -69,58 +86,52 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
         // get video Url
         String videoUrl = historyVideo.getVideoUrl();
 
-        // Media controller for play, pause, seekbar, timer etc
-        MediaController mediaController = new MediaController(context);
-        mediaController.setAnchorView(holder.videoView);
+        try {
+            DefaultTrackSelector trackSelector = new DefaultTrackSelector(context);
+            holder.player = new SimpleExoPlayer.Builder(context)
+                            .setTrackSelector(trackSelector)
+                            .build();
+            trackSelector.setParameters(
+                    trackSelector
+                            .buildUponParameters()
+                            .setAllowVideoMixedMimeTypeAdaptiveness(true));
 
-        Uri videoUri = Uri.parse(videoUrl);
-        holder.videoView.setMediaController(mediaController);
-        holder.videoView.setVideoURI(videoUri);
+            //  parsing uri from string
+            Uri videoUri = Uri.parse(videoUrl);
 
-        holder.videoView.requestFocus();
-        holder.videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                // video is ready to play
-                mp.start();
+            // set up playerview
+            holder.playerView.setPlayer(holder.player);
 
-            }
-        });
+            // set up player
+            MediaItem mediaItem = MediaItem.fromUri(videoUri);
+            holder.player.setMediaItem(mediaItem);
+            holder.player.prepare();
+            holder.player.setPlayWhenReady(true);
 
-        holder.videoView.setOnInfoListener(new MediaPlayer.OnInfoListener() {
-            @Override
-            public boolean onInfo(MediaPlayer mp, int what, int extra) {
-                // to check if buffering, rendering etc
-                switch(what){
-                    case MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START:{
-                        Log.i(TAG, "RENDERING STARTS");
-                        // rendering started
-                        holder.progressBar.setVisibility(View.VISIBLE);
-                        return true;
-                    }
-                    case MediaPlayer.MEDIA_INFO_BUFFERING_START:{
-                        Log.i(TAG, "BUFFERING STARTS");
-                        // buffering starts
-                        holder.progressBar.setVisibility(View.VISIBLE);
-                        return true;
-                    }
-                    case MediaPlayer.MEDIA_INFO_BUFFERING_END:{
-                        Log.i(TAG, "BUFFERING ENDS");
-                        holder.progressBar.setVisibility(View.GONE);
-                        return true;
+            // add listender to handle events
+            holder.player.addListener(new Player.Listener() {
+                @Override
+                public void onPlaybackStateChanged(int state) {
+                    switch(state){
+                        case Player.STATE_BUFFERING:{
+                            holder.progressBar.setVisibility(View.VISIBLE);
+                        }
+                        case Player.STATE_READY:{
+                            holder.progressBar.setVisibility(View.GONE);
+                        }
                     }
                 }
-                return false;
-            }
-        });
+            });
 
-        holder.videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                mp.start(); //restart video if completed
-            }
-        });
+
+        } catch (Exception e) {
+            // below line is used for
+            // handling our errors.
+            Log.e("TAG", "Error : " + e.toString());
+        }
+
     }
+
 
     @Override
     public int getItemCount(){
@@ -131,9 +142,10 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
 
     // View Holder class, holds, units the UI View
     class VideoHolder extends RecyclerView.ViewHolder{
+        SimpleExoPlayer player;
         // UI Views of row_video.xml
-        VideoView videoView;
-//        PlayerView playerView;
+//        VideoView videoView;
+        PlayerView playerView;
 
         TextView titletv, timetv;
         ProgressBar progressBar;
@@ -142,7 +154,9 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
             super(itemView);
 
             // init UI Views of row_video.xml
-            videoView = itemView.findViewById(R.id.history_view);
+            playerView = itemView.findViewById(R.id.history_view);
+            player = new SimpleExoPlayer.Builder(HistoryVideoAdapter.this.context).build();
+            playerView.setPlayer(player);
 //            titletv = itemView.findViewById(R.id.titleTv);
             timetv = itemView.findViewById(R.id.timeTv);
             progressBar = itemView.findViewById(R.id.progressBar);
@@ -196,5 +210,6 @@ class HistoryVideo{
         this.videoUrl = videoUrl;
     }
 }
+
 
 

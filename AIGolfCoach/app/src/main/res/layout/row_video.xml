@@ -4,17 +4,17 @@
     android:layout_height="match_parent"
     android:background="@color/black">
 
-<!--    <com.google.android.exoplayer2.ui.PlayerView-->
-<!--        android:id="@+id/history_view"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:layout_centerVertical="true" />-->
-
-    <VideoView
+    <com.google.android.exoplayer2.ui.PlayerView
         android:id="@+id/history_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_centerVertical="true" />
+
+<!--    <VideoView-->
+<!--        android:id="@+id/history_view"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:layout_centerVertical="true" />-->
 
 
 <!--    <TextView-->

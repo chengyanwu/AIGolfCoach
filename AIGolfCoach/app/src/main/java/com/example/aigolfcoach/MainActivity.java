@@ -33,6 +33,7 @@ import com.example.aigolfcoach.preference.PreferenceUtils;
 import com.example.aigolfcoach.preview.VisionProcessorBase;
 import com.example.aigolfcoach.preview.posedetector.PoseDetectorProcessor;
 import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -68,7 +69,6 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
 
     private Uri videoPath = null;
 
-    private VideoView videoView;
     private FloatingActionButton pickVideoFab;
     private Button uploadVideoBtn;
     private Button showHisotryBtn;
