@@ -24,6 +24,7 @@
         <entry key="app/src/main/res/layout/toggle_style.xml" value="0.1515625" />
         <entry key="app/src/main/res/layout/tool_bar.xml" value="0.159375" />
         <entry key="app/src/main/res/menu/tool_bar.xml" value="0.15729166666666666" />
+        <entry key="app/src/main/res/menu/tool_bar_history.xml" value="0.15729166666666666" />
         <entry key="app/src/main/res/xml/preference_live_preview_quickstart.xml" value="0.15729166666666666" />
         <entry key="app/src/main/res/xml/preference_still_image.xml" value="0.15729166666666666" />
       </map>

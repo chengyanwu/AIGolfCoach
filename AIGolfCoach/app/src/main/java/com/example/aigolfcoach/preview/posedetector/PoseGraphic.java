@@ -76,7 +76,6 @@ public class PoseGraphic extends Graphic {
       boolean rescaleZForVisualization,
       List<String> poseClassification) {
     super(overlay);
-    Log.i(TAG, "Creating Posegraphic");
     this.pose = pose;
     this.function = function;
     this.showInFrameLikelihood = showInFrameLikelihood;
@@ -110,7 +109,6 @@ public class PoseGraphic extends Graphic {
 
   @Override
   public void draw(Canvas canvas) {
-    Log.i(TAG, "entering draw");
     List<PoseLandmark> landmarks = pose.getAllPoseLandmarks();
     if (landmarks.isEmpty()) {
       return;

@@ -81,7 +81,7 @@ public class DisplayHistoryActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
         switch(item.getItemId()){
-            case R.id.return_to_main:
+            case R.id.navigateToMainPage:
                 Intent intent = new Intent(DisplayHistoryActivity.this, MainActivity.class);
                 startActivity(intent);
                 return true;

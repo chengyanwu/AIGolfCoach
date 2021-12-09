@@ -2,9 +2,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/return_to_main"
+        android:id="@+id/navigateToMainPage"
         android:icon="@drawable/ic_return_button"
-        android:title="return to main"
+        android:title="go to main"
         app:showAsAction="ifRoom"
         ></item>
 

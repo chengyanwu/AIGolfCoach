@@ -10,6 +10,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -71,7 +73,6 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
 
     private FloatingActionButton pickVideoFab;
     private Button uploadVideoBtn;
-    private Button showHisotryBtn;
     private ProgressDialog progressDial;
 
     private SimpleExoPlayer player;
@@ -114,7 +115,6 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
 
         pickVideoFab = findViewById(R.id.pickVideoFab);
         uploadVideoBtn = findViewById(R.id.uploadBtn);
-        showHisotryBtn = findViewById(R.id.showHistoryBtn);
 
         // setup progress dialog
         progressDial = new ProgressDialog(this);
@@ -148,13 +148,6 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
                 }else{
                     uploadVideoToFirebase();
                 }
-            }
-        });
-
-        showHisotryBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showHistory();
             }
         });
 
@@ -272,12 +265,6 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
     private void recordVideo(){
         Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
         startActivityForResult(intent, VIDEO_RECORD_CODE);
-    }
-
-    private void showHistory() {
-        Intent intent = new Intent(MainActivity.this, DisplayHistoryActivity.class);
-        Log.i("SHOW_HISTORY_TAG", "showing history");
-        startActivity(intent);
     }
 
     private void pickVideoSource(){
@@ -421,6 +408,24 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
             imageProcessor = null;
             processing = false;
             pending = false;
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.tool_bar_history, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch(item.getItemId()){
+            case R.id.navigateToHistoryPage:
+                Intent intent = new Intent(MainActivity.this, DisplayHistoryActivity.class);
+                startActivity(intent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 

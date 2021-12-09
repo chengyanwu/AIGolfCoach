@@ -29,18 +29,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent">
-        <!--  Select Video  -->
-
-        <Button
-            android:id="@+id/showHistoryBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="History"
-            app:layout_constraintBottom_toTopOf="@+id/function_selector"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            tools:ignore="OnClick" />
 
         <Button
             android:id="@+id/uploadBtn"
@@ -48,10 +36,12 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:text="Upload"
-            app:layout_constraintBottom_toTopOf="@+id/showHistoryBtn"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.452"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.684" />
 
         <Spinner
             android:id="@+id/function_selector"
@@ -61,14 +51,16 @@
             android:gravity="center_horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.162" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/pickVideoFab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="320dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginStart="324dp"
+            android:layout_marginBottom="24dp"
             android:src="@drawable/ic_video_library"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" />

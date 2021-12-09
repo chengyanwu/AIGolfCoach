@@ -12,9 +12,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.MediaController;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -67,7 +71,6 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
     private GraphicOverlay graphicOverlay;
 
     VisionProcessorBase imageProcessor;
-    private boolean graphicOn = true;
 
     int frameWidth, frameHeight;
     boolean processing;
@@ -76,6 +79,8 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
     Bitmap lastFrame;
 
     String selectedFunction = "Spine Tracking";
+    private static final String SPINE_TRACKING = "Spine Tracking";
+    private static final String HEAD_TRACKING = "Head Tracking";
 
     public HistoryVideoAdapter(Context context, ArrayList<HistoryVideo> videoArrayList){
         this.context = context;
@@ -109,6 +114,26 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
         holder.timetv.setText(formattedDateTime);
         setVideoUrl(historyVideo, holder);
 
+        // hadnle start and stop analysis
+        holder.startAnalysisFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                holder.startAnalysis = !holder.startAnalysis;
+                if(holder.startAnalysis){
+                    Log.i(TAG, "Start Analysis");
+                    createFunctionProcessor();
+                    addVideoAnalysis(historyVideo, holder);
+                    if (lastFrame != null) processFrame(lastFrame);
+                }else{
+                    Log.i(TAG, "Stop Analysis");
+                    stopImageProcessor();
+                    // clear canvas
+                    contentFrame.removeView(graphicOverlay);
+
+                }
+            }
+        });
+
         // handle delete video click
         holder.deleteFab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -120,9 +145,8 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         // confirm delete
-
-                        deleteVideo(historyVideo);
-                        videoArrayList.remove(position);
+                        Log.i(TAG, "delete video");
+                        deleteVideo(historyVideo, holder);
                     }
                 })
                 .setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
@@ -137,9 +161,33 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
             }
         });
 
-        createImageProcessor();
-        addVideoAnalysis(historyVideo, holder);
-        if (lastFrame != null) processFrame(lastFrame);
+        List<String> options = new ArrayList<>();
+        options.add(SPINE_TRACKING);
+        options.add(HEAD_TRACKING);
+
+        // Creating adapter for featureSpinner
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this.context, R.layout.spinner_style, options);
+        // Drop down layout style - list view with radio button
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // attaching data adapter to spinner
+        holder.functionSpinner.setAdapter(dataAdapter);
+        holder.functionSpinner.setOnItemSelectedListener(
+                new AdapterView.OnItemSelectedListener() {
+
+                    @Override
+                    public void onItemSelected(
+                            AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                        selectedFunction = parentView.getItemAtPosition(pos).toString();
+                        Log.i(TAG, "Function Selected: "+selectedFunction);
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> arg0) {}
+                });
+
+//        createImageProcessor();
+//        addVideoAnalysis(historyVideo, holder);
+//        if (lastFrame != null) processFrame(lastFrame);
         Log.i(TAG, "onBindViewHolder ended");
 
     }
@@ -199,7 +247,7 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
 
     }
 
-    private void deleteVideo(HistoryVideo historyVideo){
+    private void deleteVideo(HistoryVideo historyVideo, VideoHolder holder){
         String videoUrl = historyVideo.getVideoUrl();
         String videoTimestamp = historyVideo.timestamp;
 
@@ -232,6 +280,13 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
                         Toast.makeText(context, "Failed to Delete Video", Toast.LENGTH_SHORT).show();
                     }
                 });
+
+        // delete itemveiw from recyclerview
+        videoArrayList.remove(holder.getAdapterPosition());
+        notifyItemRemoved(holder.getAdapterPosition());
+        notifyItemRangeChanged(holder.getAdapterPosition(), getItemCount());
+        holder.itemView.setVisibility(View.GONE);
+
     }
 
     private void addVideoAnalysis(HistoryVideo historyVideo, VideoHolder holder) {
@@ -239,20 +294,20 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
         glPlayerView = new GlPlayerView(this.context);
         glPlayerView.setSimpleExoPlayer(holder.player);
         glPlayerView.setFrameListener(this);
-        View videoFrameView = glPlayerView;
 
-        if(videoFrameView != null) contentFrame.addView(videoFrameView);
+        if(glPlayerView != null) contentFrame.addView(glPlayerView);
 
         graphicOverlay = new GraphicOverlay(this.context, null);
         contentFrame.addView(graphicOverlay);
     }
+
 
     @Override
     public void onFrame(Bitmap bitmap) {
         processFrame(bitmap);
     }
 
-    protected void createImageProcessor(){
+    protected void createFunctionProcessor(){
         PoseDetectorOptionsBase poseDetectorOptions =
                 PreferenceUtils.getPoseDetectorOptionsForLivePreview(this.context);
         boolean shouldShowInFrameLikelihood = false;
@@ -320,12 +375,17 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
         TextView titletv, timetv;
         ProgressBar progressBar;
         FloatingActionButton deleteFab;
+        Spinner functionSpinner;
+        FloatingActionButton startAnalysisFab;
+        boolean startAnalysis = false;
+
 
         public VideoHolder(@NonNull View itemView){
             super(itemView);
 
             // init UI Views of row_video.xml
             playerView = itemView.findViewById(R.id.history_view);
+            functionSpinner = itemView.findViewById(R.id.function_selector_history);
             player = new SimpleExoPlayer.Builder(HistoryVideoAdapter.this.context).build();
 //            playerView.setPlayer(player);
 //            titletv = itemView.findViewById(R.id.titleTv);
@@ -333,6 +393,7 @@ public class HistoryVideoAdapter extends RecyclerView.Adapter<HistoryVideoAdapte
             progressBar = itemView.findViewById(R.id.progressBar);
 
             deleteFab = itemView.findViewById(R.id.deleteFab);
+            startAnalysisFab = itemView.findViewById(R.id.startAnalysisFab);
         }
 
     }
