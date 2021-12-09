@@ -57,7 +57,7 @@ import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.FrameListener{
-    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = "MainActivity";
 
     private static int CAMERA_PERMISSION_CODE = 100;
     private static int VIDEO_RECORD_CODE = 101;
@@ -333,7 +333,6 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
                     @Override
                     public void onProcessingComplete() {
                         processing = false;
-                        onProcessComplete(frame);
                         if(pending) processFrame(lastFrame);
                     }
                 });
@@ -341,8 +340,6 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
             }
         }
     }
-
-    protected void onProcessComplete(Bitmap frame){ }
 
     private void populateFunctionSelector(){
         Spinner functionSpinner = findViewById(R.id.function_selector);
@@ -363,6 +360,7 @@ public class MainActivity extends AppCompatActivity implements GlPlayerRenderer.
                     public void onItemSelected(
                             AdapterView<?> parentView, View selectedItemView, int pos, long id) {
                         selectedFunction = parentView.getItemAtPosition(pos).toString();
+                        Log.i(TAG, "Function Selected: "+selectedFunction);
                         createFunctionProcessor();
                         if(lastFrame != null) processFrame(lastFrame);
                     }

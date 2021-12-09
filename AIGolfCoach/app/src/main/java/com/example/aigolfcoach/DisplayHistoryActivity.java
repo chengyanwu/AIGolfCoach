@@ -6,6 +6,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
@@ -19,7 +21,6 @@ import java.util.ArrayList;
 
 public class DisplayHistoryActivity extends AppCompatActivity {
 
-    private Button button;
     private RecyclerView recyclerView;
 
     private ArrayList<HistoryVideo> videoArrayList;
@@ -31,23 +32,12 @@ public class DisplayHistoryActivity extends AppCompatActivity {
         setContentView(R.layout.activity_display_history);
 
         // Set action bar title
-        setTitle("history");
+        setTitle("User History");
 
         // Init UI
-        button = this.findViewById(R.id.button2);
         recyclerView = this.findViewById(R.id.recyclerView);
 
         loadVideoFromFirebase();
-
-
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(DisplayHistoryActivity.this, MainActivity.class);
-                startActivity(intent);
-
-            }
-        });
     }
 
     private void loadVideoFromFirebase(){
@@ -75,9 +65,29 @@ public class DisplayHistoryActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-
+                // default
             }
+
+
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.tool_bar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch(item.getItemId()){
+            case R.id.return_to_main:
+                Intent intent = new Intent(DisplayHistoryActivity.this, MainActivity.class);
+                startActivity(intent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
 }

@@ -24,6 +24,8 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.graphics.PorterDuff;
+import android.util.Log;
 
 import com.google.common.primitives.Ints;
 import com.google.mlkit.vision.common.PointF3D;
@@ -36,6 +38,8 @@ import java.util.Locale;
 
 /** Draw the detected pose in preview. */
 public class PoseGraphic extends Graphic {
+
+  private static final String TAG = "PoseGraphic";
 
   private static final float DOT_RADIUS = 8.0f;
   private static final float IN_FRAME_LIKELIHOOD_TEXT_SIZE = 30.0f;
@@ -61,7 +65,7 @@ public class PoseGraphic extends Graphic {
   private final Paint redPaint;
 
 
-  private final String function;
+  private String function;
 
   PoseGraphic(
       GraphicOverlay overlay,
@@ -72,6 +76,7 @@ public class PoseGraphic extends Graphic {
       boolean rescaleZForVisualization,
       List<String> poseClassification) {
     super(overlay);
+    Log.i(TAG, "Creating Posegraphic");
     this.pose = pose;
     this.function = function;
     this.showInFrameLikelihood = showInFrameLikelihood;
@@ -105,6 +110,7 @@ public class PoseGraphic extends Graphic {
 
   @Override
   public void draw(Canvas canvas) {
+    Log.i(TAG, "entering draw");
     List<PoseLandmark> landmarks = pose.getAllPoseLandmarks();
     if (landmarks.isEmpty()) {
       return;
@@ -169,7 +175,7 @@ public class PoseGraphic extends Graphic {
 
 
     // Face
-//    drawLine(canvas, nose, lefyEyeInner, whitePaint);
+//    drawLine(canvas, nos\\\e, lefyEyeInner, whitePaint);
 //    drawLine(canvas, lefyEyeInner, lefyEye, whitePaint);
 //    drawLine(canvas, lefyEye, leftEyeOuter, whitePaint);
 //    drawLine(canvas, leftEyeOuter, leftEar, whitePaint);
@@ -210,10 +216,19 @@ public class PoseGraphic extends Graphic {
 
     switch(function){
       case SPINE_TRACKING:
+//        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
         drawSpine(canvas, true, leftShoulder, rightShoulder, leftHip, rightHip);
         drawSpine(canvas, false, leftShoulder, rightShoulder, leftHip, rightHip);
+        Log.i(TAG,"Spine Tracking Selected");
+        break;
       case HEAD_TRACKING:
-        drawHead(canvas, leftEye, rightEye, nose);
+        Log.i(TAG,"Head Tracking Selected");
+        drawHead(canvas, true, leftEye, rightEye, nose);
+//        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+        break;
+      default:
+        ;
+
     }
     // Draw inFrameLikelihood for all points
     if (showInFrameLikelihood) {
@@ -226,16 +241,29 @@ public class PoseGraphic extends Graphic {
       }
     }
   }
+  private void drawHead(Canvas canvas, boolean isCoach, PoseLandmark leftEye, PoseLandmark rightEye, PoseLandmark nose) {
+    PointF point1 = leftEye.getPosition();
+    PointF point2 = rightEye.getPosition();
+    PointF point3 = nose.getPosition();
+    float pointHeadX = (point1.x + point2.x + point3.x) / 3;
+    float pointHeadY = (point1.y + point2.y + point3.y) / 3;
 
-  private void drawEye(Canvas canvas, PoseLandmark rightEye) {
-    drawPoint(canvas, rightEye, rightPaint);
-  }
-  private void drawHead(Canvas canvas, PoseLandmark leftEye, PoseLandmark rightEye, PoseLandmark nose) {
-    PointF3D point1 = leftEye.getPosition3D();
-    PointF3D point2 = rightEye.getPosition3D();
-    PointF3D point3 = nose.getPosition3D();
-    float pointHeadX = (point1.getX() + point2.getX() + point3.getX()) / 3;
-    float pointHeadY = (point1.getY() + point2.getY() + point3.getY()) / 3;
+    Paint paint;
+
+//    if(isCoach){
+//
+//
+//      paint = rightPaint;
+//    }else {
+//      float deltaX = topX - bottomX;
+//      float deltaY =topY - bottomY;
+//      double rad = - (double)Math.atan2(deltaY, deltaX);
+//      if( Math.abs(rad - (Math.PI / 3) ) < 0.034) paint = greenPaint;
+//      else paint = redPaint;
+//      top = from(topX, topY, topZ);
+//      bottom = from(bottomX, bottomY, bottomZ);
+//    }
+
     canvas.drawCircle(translateX(pointHeadX), translateY(pointHeadY), 15, rightPaint);
   }
 

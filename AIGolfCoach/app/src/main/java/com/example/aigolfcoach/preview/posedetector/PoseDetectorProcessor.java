@@ -41,7 +41,7 @@ public class PoseDetectorProcessor
 
   private final PoseDetector detector;
 
-  private final String function;
+  private String function;
   private final boolean showInFrameLikelihood;
   private final boolean visualizeZ;
   private final boolean rescaleZForVisualization;
@@ -80,6 +80,7 @@ public class PoseDetectorProcessor
       boolean runClassification,
       boolean isStreamMode) {
     super(context);
+    Log.i(TAG, "Creating PosedetectorProcessor");
     this.function = function;
     this.showInFrameLikelihood = showInFrameLikelihood;
     this.visualizeZ = visualizeZ;
